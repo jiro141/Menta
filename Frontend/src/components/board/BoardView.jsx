@@ -85,8 +85,8 @@ function SortableTaskCard({ task, onClick, onDelete, onArchive }) {
   );
 }
 
-export default function BoardView({ initialEditTask, onEditHandled }) {
-  const { data, loading, error, refetch } = useBoardData();
+export default function BoardView({ proyectoId, initialEditTask, onEditHandled }) {
+  const { data, loading, error, refetch } = useBoardData(proyectoId);
   const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(null);

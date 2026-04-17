@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { getEstados, getEtiquetas, getTareas, getArchivedTareas } from "../api/tasks";
+import { getEstados, getEtiquetas, getTareas, getArchivedTareas, getEstadosPorProyecto, getTareasPorProyecto } from "../api/tasks";
 import { adaptBackendToBoardData } from "../api/adapters";
 
-export function useBoardData() {
+export function useBoardData(proyectoId) {
   const [data, setData] = useState({
     statuses: [],
     tasks: [],
@@ -16,11 +16,23 @@ export function useBoardData() {
       setLoading(true);
       setError("");
 
-      const [tareas, estados, etiquetas] = await Promise.all([
-        getTareas(),
-        getEstados(),
-        getEtiquetas(),
-      ]);
+      // Si hay proyectoId, usar endpoints del proyecto
+      // Si no hay proyectoId, usar endpoints globales (para Dashboard)
+      let tareas, estados, etiquetas;
+
+      if (proyectoId) {
+        [tareas, estados, etiquetas] = await Promise.all([
+          getTareasPorProyecto(proyectoId),
+          getEstadosPorProyecto(proyectoId),
+          getEtiquetas(),
+        ]);
+      } else {
+        [tareas, estados, etiquetas] = await Promise.all([
+          getTareas(),
+          getEstados(),
+          getEtiquetas(),
+        ]);
+      }
 
       const adapted = adaptBackendToBoardData(tareas, estados, etiquetas);
       setData({
@@ -33,7 +45,7 @@ export function useBoardData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [proyectoId]);
 
   useEffect(() => {
     loadData();

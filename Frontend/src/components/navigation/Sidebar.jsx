@@ -1,14 +1,42 @@
-import { NavLink } from "react-router-dom";
-import { KanbanSquare, List, CalendarDays, Archive } from "lucide-react";
+import { NavLink, useLocation, useParams } from "react-router-dom";
+import { useEquipoStore } from "../../stores/equipoStore";
+import { FolderKanban } from "lucide-react";
+import { 
+  Folder, Code, Palette, ShoppingCart, BarChart3, Settings, 
+  Users, MessageSquare, Calendar as CalendarMail, Mail, FileText, Briefcase, 
+  Heart, Star, Zap, Target, Trophy, Rocket 
+} from "lucide-react";
 
-const items = [
-  { label: "Tablero", icon: KanbanSquare, path: "/app/board" },
-  { label: "Lista", icon: List, path: "/app/list" },
-  { label: "Calendario", icon: CalendarDays, path: "/app/calendar" },
-  { label: "Archivo", icon: Archive, path: "/app/archive" },
-];
+const ICONOS = {
+  folder: Folder,
+  code: Code,
+  palette: Palette,
+  "shopping-cart": ShoppingCart,
+  "bar-chart": BarChart3,
+  settings: Settings,
+  users: Users,
+  "message-square": MessageSquare,
+  calendar: CalendarMail,
+  mail: Mail,
+  "file-text": FileText,
+  briefcase: Briefcase,
+  heart: Heart,
+  star: Star,
+  zap: Zap,
+  target: Target,
+  trophy: Trophy,
+  rocket: Rocket,
+};
 
 export default function Sidebar() {
+  const location = useLocation();
+  const params = useParams();
+  const { equipoActual, proyectos } = useEquipoStore();
+
+  const items = [
+    { label: "Equipos", icon: FolderKanban, path: "/app/equipos" },
+  ];
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -44,6 +72,34 @@ export default function Sidebar() {
               </span>
             </NavLink>
           ))}
+
+          {/* Proyectos del equipo actual */}
+          {equipoActual && proyectos.map((proyecto) => {
+            const IconComponent = ICONOS[proyecto.icono] || Folder;
+            const isActive = location.pathname.startsWith(`/app/proyecto/${proyecto.id}`);
+            return (
+              <NavLink
+                key={proyecto.id}
+                to={`/app/proyecto/${proyecto.id}/board`}
+                className={[
+                  "w-full flex flex-col items-center gap-1 rounded-2xl px-2 py-2 transition-all",
+                  isActive
+                    ? "bg-[#10203e] text-white"
+                    : "text-[#c9d2e3] hover:bg-white/5 hover:text-white",
+                ].join(" ")}
+              >
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: proyecto.color || "#6366f1" }}
+                >
+                  <IconComponent size={16} className="text-white" />
+                </div>
+                <span className="text-[9px] font-medium leading-none text-center truncate w-full px-1">
+                  {proyecto.nombre}
+                </span>
+              </NavLink>
+            );
+          })}
         </nav>
       </aside>
 

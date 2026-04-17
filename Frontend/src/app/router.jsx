@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { createBrowserRouter, Navigate, useNavigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -8,9 +8,11 @@ import BoardPage from "../pages/BoardPage";
 import ListPage from "../pages/ListPage";
 import CalendarPage from "../pages/CalendarPage";
 import ArchivePage from "../pages/ArchivePage";
+import EquiposPage from "../pages/EquiposPage";
+import ProyectoPage from "../pages/ProyectoPage";
 import AppLayout from "../layouts/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import { isAuthenticated } from "../api/auth";
+import { isAuthenticated, getEquipo } from "../api/auth";
 
 // Componente que protege rutas y muestra toast si no hay auth
 function ProtectedRoute({ children }) {
@@ -30,13 +32,45 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Componente que protege rutas que requieren equipo seleccionado
+function RequireEquipo({ children }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Solo verificar en rutas que no sean equipos
+  const isEquiposPage = location.pathname === "/app/equipos";
+  
+  useEffect(() => {
+    if (!isEquiposPage) {
+      const equipo = getEquipo();
+      if (!equipo) {
+        toast.error("Debes seleccionar un equipo primero");
+        navigate("/app/equipos", { replace: true });
+      }
+    }
+  }, [navigate, isEquiposPage]);
+
+  // Si es la página de equipos, permitir siempre
+  if (isEquiposPage) {
+    return children;
+  }
+
+  // Verificar equipo antes de renderizar
+  const equipo = getEquipo();
+  if (!equipo) {
+    return null;
+  }
+
+  return children;
+}
+
 // Componente que redirige si ya está autenticado
 function AuthRedirect({ children }) {
   const navigate = useNavigate();
   
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate("/app/board", { replace: true });
+      navigate("/app/equipos", { replace: true });
     }
   }, [navigate]);
 
@@ -79,27 +113,47 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/app/board" replace />,
+        element: <Navigate to="/app/equipos" replace />,
       },
       {
         path: "board",
-        element: <BoardPage />,
+        element: <RequireEquipo><BoardPage /></RequireEquipo>,
       },
       {
         path: "list",
-        element: <ListPage />,
+        element: <RequireEquipo><ListPage /></RequireEquipo>,
       },
       {
         path: "calendar",
-        element: <CalendarPage />,
+        element: <RequireEquipo><CalendarPage /></RequireEquipo>,
       },
       {
         path: "dashboard",
-        element: <DashboardPage />,
+        element: <RequireEquipo><DashboardPage /></RequireEquipo>,
+      },
+      {
+        path: "equipos",
+        element: <EquiposPage />,
+      },
+      {
+        path: "proyecto/:proyectoId",
+        element: <RequireEquipo><BoardPage /></RequireEquipo>,
+      },
+      {
+        path: "proyecto/:proyectoId/board",
+        element: <RequireEquipo><BoardPage /></RequireEquipo>,
+      },
+      {
+        path: "proyecto/:proyectoId/list",
+        element: <RequireEquipo><ListPage /></RequireEquipo>,
+      },
+      {
+        path: "proyecto/:proyectoId/calendar",
+        element: <RequireEquipo><CalendarPage /></RequireEquipo>,
       },
       {
         path: "archive",
-        element: <ArchivePage />,
+        element: <RequireEquipo><ArchivePage /></RequireEquipo>,
       },
     ],
   },

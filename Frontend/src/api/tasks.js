@@ -5,6 +5,14 @@ export async function getEstados() {
   return apiFetch("/estados/");
 }
 
+export async function getEstadosPorProyecto(proyectoId) {
+  return apiFetch(`/proyectos/${proyectoId}/estados/`);
+}
+
+export async function getTareasPorProyecto(proyectoId) {
+  return apiFetch(`/proyectos/${proyectoId}/tareas/`);
+}
+
 export async function getEtiquetas() {
   return apiFetch("/etiquetas/");
 }

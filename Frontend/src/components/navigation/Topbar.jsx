@@ -6,9 +6,12 @@ import {
   FileText,
   Archive,
   ChevronRight,
+  LayoutGrid,
+  List,
+  CalendarDays,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { searchAll } from "../../api/search";
 import { useSearchStore } from "../../stores/searchStore";
@@ -18,6 +21,7 @@ export default function Topbar() {
   const { user, logout } = useAuthStore();
   const { selectTask } = useSearchStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data } = useBoardData();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -186,6 +190,20 @@ export default function Topbar() {
   const expiringTasks = getExpiringTasks();
   const progressStats = getProgressStats();
 
+  // Vista actual basada en la ruta
+  const isActiveView = (path) => location.pathname === path || location.pathname.startsWith(path);
+  
+  // Solo mostrar botones de vista si estamos en un proyecto
+  const isInProject = location.pathname.startsWith('/app/proyecto/');
+  const params = useParams();
+  const proyectoId = params.proyectoId;
+  
+  const viewButtons = isInProject && proyectoId ? [
+    { label: "Board", icon: LayoutGrid, path: `/app/proyecto/${proyectoId}/board` },
+    { label: "Lista", icon: List, path: `/app/proyecto/${proyectoId}/list` },
+    { label: "Calendario", icon: CalendarDays, path: `/app/proyecto/${proyectoId}/calendar` },
+  ] : [];
+
   return (
     <header className="h-12 sm:h-14 bg-[#0a0a0d] border-b border-white/10 px-2 sm:px-4 flex items-center justify-between gap-2 sm:gap-4">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -194,6 +212,25 @@ export default function Topbar() {
             M
           </div>
           <span className="text-xs sm:text-sm font-semibold text-white hidden sm:inline">Menta</span>
+        </div>
+
+        {/* Vista buttons en el navbar */}
+        <div className="hidden sm:flex items-center gap-1 ml-4">
+          {viewButtons.map(({ label, icon: Icon, path }) => (
+            <button
+              key={label}
+              onClick={() => navigate(path)}
+              className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                ${isActiveView(path) 
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                  : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}
+              `}
+            >
+              <Icon size={16} />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
