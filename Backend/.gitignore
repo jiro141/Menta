@@ -1,0 +1,13 @@
+# Python
+**/__pycache__/
+*.pyc
+
+# Django
+db.sqlite3
+.atl/
+nul
+~$*.docx
+
+# Node / React
+node_modules/
+.env
