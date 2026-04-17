@@ -1,4 +1,6 @@
-const API_BASE_URL = "/api";
+// En desarrollo usa proxy (localhost:8000), en producción usa redirect de Netlify
+const isDev = import.meta.env.DEV;
+const API_BASE_URL = isDev ? "/api" : "/api";
 
 function getToken() {
   const token = localStorage.getItem("menta_token");
