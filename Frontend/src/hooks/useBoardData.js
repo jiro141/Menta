@@ -43,6 +43,7 @@ export function useBoardData(proyectoId) {
       }
 
       const adapted = adaptBackendToBoardData(tareas, estados || [], etiquetas || []);
+      console.log("[DEBUG] Final - tareas:", tareas?.length, "estados:", estados?.length);
       setData({
         ...adapted,
         etiquetas: etiquetas,

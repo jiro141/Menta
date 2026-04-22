@@ -116,6 +116,7 @@ export default function BoardView({ proyectoId, equipoId, initialEditTask, onEdi
 
   // Estado local para reorder con drag & drop
   const [statuses, setStatuses] = useState(data?.statuses || []);
+  const [tasks, setTasks] = useState(data?.tasks || []);
 
   // Función para manejar edición de tarea
   const handleEditTask = (task) => {
@@ -188,12 +189,17 @@ export default function BoardView({ proyectoId, equipoId, initialEditTask, onEdi
     refetch();
   };
 
-  // Sincronizar estados cuando cambian los datos
+  // Sincronizar estados y tareas cuando cambian los datos
   useEffect(() => {
     if (data?.statuses) {
+      console.log("[DEBUG] BoardView - received statuses:", data.statuses.length);
       setStatuses(data.statuses);
     }
-  }, [data?.statuses]);
+    if (data?.tasks) {
+      console.log("[DEBUG] BoardView - received tasks:", data.tasks.length);
+      setTasks(data.tasks);
+    }
+  }, [data]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -414,10 +420,9 @@ body: JSON.stringify({
     return <div className="text-red-400">{error}</div>;
   }
 
-  const hasStatuses = data.statuses && data.statuses.length > 0;
-
-  // Obtener etiquetas del data
-  const etiquetas = data.tasks?.flatMap(t => t.tags || []) || [];
+const hasStatuses = statuses && statuses.length > 0;
+  
+  const etiquetas = tasks?.flatMap(t => t.tags || []) || [];
   const uniqueEtiquetas = [...new Map(etiquetas.map(e => [e.id, e])).values()];
 
   return (
@@ -451,7 +456,7 @@ body: JSON.stringify({
         >
           <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
             {statuses.map((status) => {
-              const tasks = data.tasks.filter((task) => 
+              const statusTasks = tasks?.filter((task) => 
                 task.status === String(status.id) || task.status === status.backendId
               );
               
@@ -459,7 +464,7 @@ body: JSON.stringify({
                 <SortableBoardColumn 
                   key={status.id}
                   status={status} 
-                  tasks={tasks}
+                  tasks={statusTasks}
                   onAddTask={() => handleAddTask(status)}
                   onEditTask={handleEditTask}
                   onDeleteTask={handleDeleteTask}
