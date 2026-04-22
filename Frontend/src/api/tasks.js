@@ -3,13 +3,9 @@ import { getToken } from "./auth";
 
 export async function getEstados(equipoId = null) {
   if (equipoId) {
-    const result = await apiFetch(`/estados/?equipo_id=${equipoId}`);
-    console.log("[API] getEstados(equipoId):", result);
-    return result;
+    return apiFetch(`/estados/?equipo_id=${equipoId}`);
   }
-  const result = await apiFetch("/estados/");
-  console.log("[API] getEstados():", result);
-  return result;
+  return apiFetch("/estados/");
 }
 
 export async function getEstadosPorProyecto(proyectoId) {
@@ -17,9 +13,7 @@ export async function getEstadosPorProyecto(proyectoId) {
 }
 
 export async function getTareasPorProyecto(proyectoId) {
-  const result = await apiFetch(`/proyectos/${proyectoId}/tareas/`);
-  console.log("[API] getTareasPorProyecto:", result);
-  return result;
+  return apiFetch(`/proyectos/${proyectoId}/tareas/`);
 }
 
 export async function getTareas(archived = false) {

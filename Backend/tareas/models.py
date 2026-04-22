@@ -142,17 +142,17 @@ class Estado(models.Model):
         on_delete=models.CASCADE,
         related_name='estados'
     )
-    # FK a equipo (estados son por equipo, nullable para migración)
-    equipo = models.ForeignKey(
-        Equipo,
-        on_delete=models.CASCADE,
+    # FK a proyecto (nullable para backward compatibility)
+    proyecto = models.ForeignKey(
+        Proyecto,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='estados'
     )
-    # FK a proyecto (nullable para backward compatibility)
-    proyecto = models.ForeignKey(
-        Proyecto,
+    # FK a equipo (nullable para migración)
+    equipo = models.ForeignKey(
+        Equipo,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -171,8 +171,6 @@ class Estado(models.Model):
 
     class Meta:
         ordering = ['orden', 'id']
-        # Nombre único por usuario
-        unique_together = ['usuario', 'nombre']
 
     def __str__(self):
         return self.nombre

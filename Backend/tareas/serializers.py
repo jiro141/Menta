@@ -182,13 +182,24 @@ class MensajeSerializer(serializers.ModelSerializer):
 
 
 class TareaConProyectoSerializer(serializers.ModelSerializer):
-    """Tarea con campos de proyecto."""
+    """Tarea con campos de proyecto.
+    
+    - proyecto: integer (read-only) en respuesta
+    - estado_id: para crear/editar (write-only)
+    - proyecto_id: para crear/editar (write-only)
+    """
     estado = EstadoSerializer(read_only=True)
     etiquetas = EtiquetaSerializer(many=True, read_only=True)
     subtareas = SubtareaSerializer(many=True, read_only=True)
-    proyecto = ProyectoSerializer(read_only=True)
     asignado = UserSerializer(read_only=True)
     
+    # Campo de respuesta: proyecto como integer
+    proyecto = serializers.SerializerMethodField()
+    
+    def get_proyecto(self, obj):
+        return obj.proyecto_id if obj.proyecto_id else None
+    
+    # Campos de escritura
     estado_id = serializers.PrimaryKeyRelatedField(
         queryset=Estado.objects.none(),
         source='estado',
@@ -196,6 +207,7 @@ class TareaConProyectoSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    # Acepta proyecto_id (integer) en POST/PATCH → lo mapea a proyecto FK
     proyecto_id = serializers.PrimaryKeyRelatedField(
         queryset=Proyecto.objects.none(),
         source='proyecto',
@@ -232,8 +244,6 @@ class TareaConProyectoSerializer(serializers.ModelSerializer):
         user = request.user if request and hasattr(request, 'user') else None
         
         if user and user.is_authenticated:
-            # Estados del usuario o del proyecto
             self.fields['estado_id'].queryset = Estado.objects.filter(usuario=user)
-            # Proyectos donde el usuario es miembro del equipo
             miembro_equipo_ids = Miembro.objects.filter(usuario=user).values_list('equipo_id', flat=True)
             self.fields['proyecto_id'].queryset = Proyecto.objects.filter(equipo_id__in=miembro_equipo_ids)

@@ -62,7 +62,7 @@ def search_view(request):
     )[:10]
     
     # Serializar resultados
-    tarea_serializer = TareaSerializer(tareas, many=True, context={'request': request})
+    tarea_serializer = TareaConProyectoSerializer(tareas, many=True, context={'request': request})
     estado_serializer = EstadoSerializer(estados, many=True)
     
     return Response({
@@ -297,7 +297,7 @@ class EtiquetaViewSet(viewsets.ModelViewSet):
 
 
 class TareaViewSet(viewsets.ModelViewSet):
-    serializer_class = TareaSerializer
+    serializer_class = TareaConProyectoSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["titulo", "descripcion"]
@@ -502,6 +502,8 @@ class EquipoViewSet(viewsets.ModelViewSet):
             icono = request.data.get('icono') or 'folder'
             color = request.data.get('color') or '#6366f1'
             
+            print(f"[DEBUG] Creando proyecto - icono: {icono}, color: {color}, data: {dict(request.data)}")
+            
             proyecto = Proyecto.objects.create(
                 equipo=equipo,
                 nombre=nombre,
@@ -510,6 +512,8 @@ class EquipoViewSet(viewsets.ModelViewSet):
                 icono=icono,
                 creador=request.user
             )
+            proyecto.refresh_from_db()
+            print(f"[DEBUG] Proyecto guardado - icono: {proyecto.icono}")
             return Response(ProyectoSerializer(proyecto).data, status=201)
 
 

@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://mentadev.pythonanywhere.com',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'http://localhost:8000',
+        target: 'https://mentadev.pythonanywhere.com',
         changeOrigin: true,
         ws: true,
       },

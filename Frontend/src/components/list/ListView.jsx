@@ -22,8 +22,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-export default function ListView() {
-  const { data, loading, error, refetch } = useBoardData();
+export default function ListView({ proyectoId }) {
+  const { data, loading, error, refetch } = useBoardData(proyectoId);
   const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [newEstado, setNewEstado] = useState({ nombre: "", color: "#6b7280" });
   const [estadoError, setEstadoError] = useState("");
@@ -247,6 +247,7 @@ export default function ListView() {
         titulo: taskData.titulo,
         descripcion: taskData.descripcion,
         estado_id: estadoId,
+        proyecto_id: proyectoId ? parseInt(proyectoId) : null,
         etiquetas_ids: taskData.etiquetas || [],
         fecha_inicio: taskData.fecha_inicio || null,
         fecha_fin: taskData.fecha_fin || null,

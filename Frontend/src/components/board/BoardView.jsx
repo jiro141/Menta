@@ -114,9 +114,9 @@ export default function BoardView({ proyectoId, equipoId, initialEditTask, onEdi
     onConfirm: () => {},
   });
 
-  // Estado local para reorder con drag & drop
-  const [statuses, setStatuses] = useState(data?.statuses || []);
-  const [tasks, setTasks] = useState(data?.tasks || []);
+  // Usar datos directamente del hook como ListView
+  const statuses = data?.statuses || [];
+  const tasks = data?.tasks || [];
 
   // Función para manejar edición de tarea
   const handleEditTask = (task) => {
@@ -188,19 +188,6 @@ export default function BoardView({ proyectoId, equipoId, initialEditTask, onEdi
     setEditTask(null);
     refetch();
   };
-
-  // Sincronizar estados y tareas cuando cambian los datos
-  useEffect(() => {
-    console.log("[DEBUG] BoardView useEffect - data:", data);
-    if (data?.statuses) {
-      console.log("[DEBUG] BoardView - setting statuses:", data.statuses.length, data.statuses);
-      setStatuses(data.statuses);
-    }
-    if (data?.tasks) {
-      console.log("[DEBUG] BoardView - setting tasks:", data.tasks.length);
-      setTasks(data.tasks);
-    }
-  }, [data]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -392,6 +379,7 @@ body: JSON.stringify({
         titulo: taskData.titulo,
         descripcion: taskData.descripcion,
         estado_id: estadoId,
+        proyecto_id: proyectoId ? parseInt(proyectoId) : null,
         etiquetas_ids: taskData.etiquetas || [],
         fecha_inicio: taskData.fecha_inicio || null,
         fecha_fin: taskData.fecha_fin || null,
@@ -457,9 +445,16 @@ const hasStatuses = statuses && statuses.length > 0;
         >
           <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
             {statuses.map((status) => {
-              const statusTasks = tasks?.filter((task) => 
-                task.status === String(status.id) || task.status === status.backendId
-              );
+              const statusTasks = tasks?.filter((task) => {
+                const taskStatus = task.status;
+                const statusId = status.id;
+                const backendId = status.backendId;
+                // Comparar flexible: string-string o number-number
+                return taskStatus === String(statusId) || 
+                       taskStatus === String(backendId) || 
+                       taskStatus === backendId ||
+                       Number(taskStatus) === backendId;
+              });
               
               return (
                 <SortableBoardColumn 

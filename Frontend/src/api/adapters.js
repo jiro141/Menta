@@ -1,12 +1,34 @@
 export function adaptBackendToBoardData(tareas, estados, etiquetas) {
-  if (!estados || estados.length === 0 || !tareas || tareas.length === 0) {
-    return { statuses: [], tasks: [] };
+  // Normalizar los inputs para evitar null/undefined
+  const tareasVal = Array.isArray(tareas) ? tareas : [];
+  const estadosVal = Array.isArray(estados) ? estados : [];
+  const etiquetasVal = Array.isArray(etiquetas) ? etiquetas : [];
+
+  // Los estados siempre deben mostrarse aunque no haya tareas
+  // Las tareas también deben mostrarse aunque no haya estados (aunque no tendrán columna)
+  if (!estadosVal || estadosVal.length === 0) {
+    // Si no hay estados, igual retornamos las tareas sin grouping
+    return { statuses: [], tasks: tareasVal };
+  }
+  
+  if (!tareasVal || tareasVal.length === 0) {
+    // Si no hay tareas pero hay estados, retornamos los estados con array de tareas vacío
+    const statuses = estadosVal.map((estado) => ({
+      id: String(estado.id),
+      name: estado.nombre,
+      color: estado.color || "gray",
+      orden: estado.orden || 0,
+      backendId: estado.id,
+      esFinal: estado.es_final || false,
+    }));
+    statuses.sort((a, b) => a.orden - b.orden);
+    return { statuses, tasks: [] };
   }
 
-  const estadosMap = new Map(estados.map((estado) => [estado.id, estado]));
-  const etiquetasMap = new Map(etiquetas.map((etiqueta) => [etiqueta.id, etiqueta]));
+  const estadosMap = new Map(estadosVal.map((estado) => [estado.id, estado]));
+  const etiquetasMap = new Map(etiquetasVal.map((etiqueta) => [etiqueta.id, etiqueta]));
 
-  const statuses = estados.map((estado) => ({
+  const statuses = estadosVal.map((estado) => ({
     id: String(estado.id),
     name: estado.nombre,
     color: estado.color || "gray",
@@ -17,7 +39,7 @@ export function adaptBackendToBoardData(tareas, estados, etiquetas) {
 
   statuses.sort((a, b) => a.orden - b.orden);
 
-  const tasks = tareas.map((tarea) => {
+  const tasks = tareasVal.map((tarea) => {
     const estadoId = tarea.estado?.id || tarea.estado;
     
     const tareaEtiquetas = tarea.etiquetas || [];

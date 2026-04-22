@@ -1,5 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
-import { getEstados, getEtiquetas, getTareas, getArchivedTareas, getTareasPorProyecto } from "../api/tasks";
+import {
+  getEstados,
+  getEtiquetas,
+  getTareas,
+  getTareasPorProyecto,
+  getArchivedTareas,
+} from "../api/tasks";
 import { useEquipoStore } from "../stores/equipoStore";
 import { adaptBackendToBoardData } from "../api/adapters";
 
@@ -23,27 +29,26 @@ export function useBoardData(proyectoId) {
 
       let tareas, etiquetas;
 
+      // Si hay proyectoId, traer solo tareas de ese proyecto
+      // Si no, traer todas las tareas del usuario
       if (proyectoId) {
-        [tareas, etiquetas] = await Promise.all([
-          getTareasPorProyecto(proyectoId),
-          getEtiquetas(),
-        ]);
-
-        if (equipoId) {
-          estados = await getEstados(equipoId);
-        } else {
-          estados = await getEstados();
-        }
+        [tareas, etiquetas] = await Promise.all([getTareasPorProyecto(proyectoId), getEtiquetas()]);
       } else {
-        [tareas, estados, etiquetas] = await Promise.all([
-          getTareas(),
-          getEstados(),
-          getEtiquetas(),
-        ]);
+        [tareas, etiquetas] = await Promise.all([getTareas(), getEtiquetas()]);
       }
 
-      const adapted = adaptBackendToBoardData(tareas, estados || [], etiquetas || []);
-      console.log("[DEBUG] Final - tareas:", tareas?.length, "estados:", estados?.length);
+      // Obtener estados del equipo si existe, si no del usuario
+      if (equipoId) {
+        estados = await getEstados(equipoId);
+      } else {
+        estados = await getEstados();
+      }
+
+      const adapted = adaptBackendToBoardData(
+        tareas,
+        estados || [],
+        etiquetas || [],
+      );
       setData({
         ...adapted,
         etiquetas: etiquetas,
