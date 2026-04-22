@@ -1,7 +1,10 @@
 import { apiFetch } from "./client";
 import { getToken } from "./auth";
 
-export async function getEstados() {
+export async function getEstados(equipoId = null) {
+  if (equipoId) {
+    return apiFetch(`/estados/?equipo_id=${equipoId}`);
+  }
   return apiFetch("/estados/");
 }
 

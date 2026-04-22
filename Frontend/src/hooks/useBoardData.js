@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { getEstados, getEtiquetas, getTareas, getArchivedTareas, getEstadosPorProyecto, getTareasPorProyecto } from "../api/tasks";
+import { getEstados, getEtiquetas, getTareas, getArchivedTareas, getTareasPorProyecto } from "../api/tasks";
+import { useEquipoStore } from "../stores/equipoStore";
 import { adaptBackendToBoardData } from "../api/adapters";
 
 export function useBoardData(proyectoId) {
@@ -16,14 +17,23 @@ export function useBoardData(proyectoId) {
       setLoading(true);
       setError("");
 
-      let tareas, estados, etiquetas;
+      const { equipoActual } = useEquipoStore.getState();
+      const equipoId = equipoActual?.id;
+      let estados;
+
+      let tareas, etiquetas;
 
       if (proyectoId) {
-        [tareas, estados, etiquetas] = await Promise.all([
+        [tareas, etiquetas] = await Promise.all([
           getTareasPorProyecto(proyectoId),
-          getEstados(),
           getEtiquetas(),
         ]);
+
+        if (equipoId) {
+          estados = await getEstados(equipoId);
+        } else {
+          estados = await getEstados();
+        }
       } else {
         [tareas, estados, etiquetas] = await Promise.all([
           getTareas(),
@@ -32,7 +42,7 @@ export function useBoardData(proyectoId) {
         ]);
       }
 
-      const adapted = adaptBackendToBoardData(tareas, estados, etiquetas);
+      const adapted = adaptBackendToBoardData(tareas, estados || [], etiquetas || []);
       setData({
         ...adapted,
         etiquetas: etiquetas,

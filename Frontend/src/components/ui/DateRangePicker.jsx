@@ -54,8 +54,10 @@ export default function DateRangePicker({
 
   const formatDate = (date) => {
     if (!date) return "";
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const isSameDay = (date1, date2) => {
@@ -224,8 +226,7 @@ export default function DateRangePicker({
                 type="button"
                 onClick={() => {
                   const today = new Date();
-                  const dateStr = today.toISOString().split('T')[0];
-                  onStartDateChange(dateStr);
+                  onStartDateChange(formatDate(today));
                   setSelectingStart(false);
                 }}
                 className="px-3 py-1.5 text-xs rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition"
@@ -238,8 +239,8 @@ export default function DateRangePicker({
                   const today = new Date();
                   const nextWeek = new Date(today);
                   nextWeek.setDate(today.getDate() + 7);
-                  onStartDateChange(today.toISOString().split('T')[0]);
-                  onEndDateChange(nextWeek.toISOString().split('T')[0]);
+                  onStartDateChange(formatDate(today));
+                  onEndDateChange(formatDate(nextWeek));
                   setSelectingStart(true);
                 }}
                 className="px-3 py-1.5 text-xs rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition"
