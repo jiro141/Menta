@@ -1,14 +1,5 @@
 export function adaptBackendToBoardData(tareas, estados, etiquetas) {
-  console.log("[DEBUG] adapt - tareas:", tareas);
-  console.log("[DEBUG] adapt - estados:", estados);
-  
-  if (!estados || estados.length === 0) {
-    console.warn("[DEBUG] No hay estados!");
-    return { statuses: [], tasks: [] };
-  }
-  
-  if (!tareas || tareas.length === 0) {
-    console.warn("[DEBUG] No hay tareas!");
+  if (!estados || estados.length === 0 || !tareas || tareas.length === 0) {
     return { statuses: [], tasks: [] };
   }
 
