@@ -1,4 +1,17 @@
 export function adaptBackendToBoardData(tareas, estados, etiquetas) {
+  console.log("[DEBUG] adapt - tareas:", tareas);
+  console.log("[DEBUG] adapt - estados:", estados);
+  
+  if (!estados || estados.length === 0) {
+    console.warn("[DEBUG] No hay estados!");
+    return { statuses: [], tasks: [] };
+  }
+  
+  if (!tareas || tareas.length === 0) {
+    console.warn("[DEBUG] No hay tareas!");
+    return { statuses: [], tasks: [] };
+  }
+
   const estadosMap = new Map(estados.map((estado) => [estado.id, estado]));
   const etiquetasMap = new Map(etiquetas.map((etiqueta) => [etiqueta.id, etiqueta]));
 

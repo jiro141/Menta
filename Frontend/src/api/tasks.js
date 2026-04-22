@@ -16,6 +16,12 @@ export async function getTareasPorProyecto(proyectoId) {
   return apiFetch(`/proyectos/${proyectoId}/tareas/`);
 }
 
+export async function getTareas() {
+  const response = await apiFetch("/tareas/");
+  console.log("[DEBUG] getTareas response:", response);
+  return response;
+}
+
 export async function getEtiquetas() {
   return apiFetch("/etiquetas/");
 }
