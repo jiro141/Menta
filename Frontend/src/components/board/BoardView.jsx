@@ -191,12 +191,13 @@ export default function BoardView({ proyectoId, equipoId, initialEditTask, onEdi
 
   // Sincronizar estados y tareas cuando cambian los datos
   useEffect(() => {
+    console.log("[DEBUG] BoardView useEffect - data:", data);
     if (data?.statuses) {
-      console.log("[DEBUG] BoardView - received statuses:", data.statuses.length);
+      console.log("[DEBUG] BoardView - setting statuses:", data.statuses.length, data.statuses);
       setStatuses(data.statuses);
     }
     if (data?.tasks) {
-      console.log("[DEBUG] BoardView - received tasks:", data.tasks.length);
+      console.log("[DEBUG] BoardView - setting tasks:", data.tasks.length);
       setTasks(data.tasks);
     }
   }, [data]);
