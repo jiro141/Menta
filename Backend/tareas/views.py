@@ -226,23 +226,21 @@ class EstadoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Obtener estados del usuario O del proyecto si se pasa proyecto_id
-        proyecto_id = self.request.query_params.get('proyecto_id')
-        if proyecto_id:
+        equipo_id = self.request.query_params.get('equipo_id')
+        if equipo_id:
             return Estado.objects.filter(
-                proyecto_id=proyecto_id
+                equipo_id=equipo_id
             ).order_by("orden", "id")
         return Estado.objects.filter(
             usuario=self.request.user
         ).order_by("orden", "id")
 
     def perform_create(self, serializer):
-        """Crear estado asociado al usuario actual y proyecto si se indica."""
-        proyecto_id = self.request.data.get('proyecto_id')
-        if proyecto_id:
+        equipo_id = self.request.data.get('equipo_id')
+        if equipo_id:
             try:
-                equipo = Equipo.objects.get(id=proyecto_id)
-                serializer.save(usuario=self.request.user, proyecto=equipo)
+                equipo = Equipo.objects.get(id=equipo_id)
+                serializer.save(usuario=self.request.user, equipo=equipo)
             except Equipo.DoesNotExist:
                 serializer.save(usuario=self.request.user)
         else:
@@ -500,11 +498,16 @@ class EquipoViewSet(viewsets.ModelViewSet):
             if not nombre:
                 return Response({'error': 'nombre requerido'}, status=400)
             
+            # Obtener icono - si es None, usar 'folder'
+            icono = request.data.get('icono') or 'folder'
+            color = request.data.get('color') or '#6366f1'
+            
             proyecto = Proyecto.objects.create(
                 equipo=equipo,
                 nombre=nombre,
                 descripcion=request.data.get('descripcion', ''),
-                color=request.data.get('color', '#6366f1'),
+                color=color,
+                icono=icono,
                 creador=request.user
             )
             return Response(ProyectoSerializer(proyecto).data, status=201)
@@ -546,9 +549,9 @@ class ProyectoViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def estados(self, request, pk=None):
-        """Listar estados del proyecto."""
+        """Listar estados del equipo del proyecto."""
         proyecto = self.get_object()
-        estados = proyecto.estados.all()
+        estados = Estado.objects.filter(equipo=proyecto.equipo).order_by("orden", "id")
         return Response(EstadoSerializer(estados, many=True).data)
     
     @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated])

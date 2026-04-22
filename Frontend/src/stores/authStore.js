@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as authApi from "../api/auth";
+import { useEquipoStore } from "./equipoStore";
 
 export const useAuthStore = create(
   persist(
@@ -50,6 +51,7 @@ export const useAuthStore = create(
 
       logout: () => {
         authApi.logout();
+        useEquipoStore.getState().clearEquipos();
         set({
           user: null,
           isAuthenticated: false,

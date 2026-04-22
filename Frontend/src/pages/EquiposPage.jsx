@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEquipoStore } from "../stores/equipoStore";
 import { searchUsers, addMiembro, getMiembros } from "../api/equipos";
+import toast from "react-hot-toast";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { 
@@ -85,6 +86,7 @@ export default function EquiposPage() {
   const [usuariosEncontrados, setUsuariosEncontrados] = useState([]);
   const [loadingBusqueda, setLoadingBusqueda] = useState(false);
   const [rolSeleccionado, setRolSeleccionado] = useState("DEV");
+  const hasFetchedEquipos = useRef(false);
 
   // Estado para el modal de crear equipo
   const [newEquipoNombre, setNewEquipoNombre] = useState("");
@@ -93,15 +95,11 @@ export default function EquiposPage() {
   const [newProyectoColor, setNewProyectoColor] = useState("#6366f1");
 
   useEffect(() => {
-    fetchEquipos();
-  }, []);
-
-  // Mostrar estado vacío cuando no hay equipos
-  useEffect(() => {
-    if (equipos.length === 0 && !isLoading) {
-      setShowNewEquipo(true);
+    if (!hasFetchedEquipos.current) {
+      hasFetchedEquipos.current = true;
+      fetchEquipos();
     }
-  }, [equipos, isLoading]);
+  }, []);
 
   useEffect(() => {
     if (equipoActual) {
@@ -133,31 +131,41 @@ export default function EquiposPage() {
     e.preventDefault();
     if (!newEquipoNombre.trim()) return;
     
-    await createEquipo({ 
-      nombre: newEquipoNombre,
-      descripcion: "",
-      color: "#6366f1"
-    });
-    
-    setNewEquipoNombre("");
-    setShowNewEquipo(false);
+    try {
+      await createEquipo({ 
+        nombre: newEquipoNombre,
+        descripcion: "",
+        color: "#6366f1"
+      });
+      
+      toast.success("Equipo creado");
+      setNewEquipoNombre("");
+      setShowNewEquipo(false);
+    } catch (err) {
+      toast.error(err.message || "Error al crear equipo");
+    }
   };
 
   const handleCreateProyecto = async (e) => {
     e.preventDefault();
     if (!newProyectoNombre.trim() || !equipoActual) return;
     
-    await createProyecto(equipoActual.id, {
-      nombre: newProyectoNombre,
-      descripcion: "",
-      color: newProyectoColor,
-      icono: newProyectoIcono
-    });
-    
-    setNewProyectoNombre("");
-    setNewProyectoIcono("folder");
-    setNewProyectoColor("#6366f1");
-    setShowNewProyecto(false);
+    try {
+      await createProyecto(equipoActual.id, {
+        nombre: newProyectoNombre,
+        descripcion: "",
+        color: newProyectoColor,
+        icono: newProyectoIcono
+      });
+      
+      toast.success("Proyecto creado");
+      setNewProyectoNombre("");
+      setNewProyectoIcono("folder");
+      setNewProyectoColor("#6366f1");
+      setShowNewProyecto(false);
+    } catch (err) {
+      toast.error(err.message || "Error al crear proyecto");
+    }
   };
 
   const handleInvitar = async (usuarioId) => {
@@ -200,6 +208,45 @@ return (
             <Plus size={20} />
             Crear mi primer equipo
           </button>
+
+          {/* Modal crear primer equipo */}
+          {showNewEquipo && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowNewEquipo(false)}>
+              <form onSubmit={handleCreateEquipo} className="bg-[#1a1d29] p-6 rounded-2xl w-full max-w-md border border-white/10" onClick={e => e.stopPropagation()}>
+                <h3 className="text-xl font-bold mb-4 text-white">Crear tu primer equipo</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Nombre del equipo</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Mi Equipo"
+                      value={newEquipoNombre}
+                      onChange={(e) => setNewEquipoNombre(e.target.value)}
+                      className="w-full h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-white outline-none focus:border-indigo-400 placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewEquipo(false)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !newEquipoNombre.trim()}
+                    className="flex-1 px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition disabled:opacity-50"
+                  >
+                    {isLoading ? "Creando..." : "Crear"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       )}
 
@@ -217,6 +264,45 @@ return (
             <Plus size={20} />
             <span>Nuevo Equipo</span>
           </button>
+
+          {/* Modal crear nuevo equipo (cuando ya hay equipos) */}
+          {showNewEquipo && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowNewEquipo(false)}>
+              <form onSubmit={handleCreateEquipo} className="bg-[#1a1d29] p-6 rounded-2xl w-full max-w-md border border-white/10" onClick={e => e.stopPropagation()}>
+                <h3 className="text-xl font-bold mb-4 text-white">Crear nuevo equipo</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Nombre del equipo</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Mi Equipo"
+                      value={newEquipoNombre}
+                      onChange={(e) => setNewEquipoNombre(e.target.value)}
+                      className="w-full h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-white outline-none focus:border-indigo-400 placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewEquipo(false)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !newEquipoNombre.trim()}
+                    className="flex-1 px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition disabled:opacity-50"
+                  >
+                    {isLoading ? "Creando..." : "Crear"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {equipos.map((equipo) => (
@@ -453,7 +539,8 @@ return (
                     Cancelar
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleCreateProyecto}
                     disabled={isLoading || !newProyectoNombre.trim()}
                     className="flex-1 px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition disabled:opacity-50"
                   >

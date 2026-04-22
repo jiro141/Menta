@@ -16,14 +16,12 @@ export function useBoardData(proyectoId) {
       setLoading(true);
       setError("");
 
-      // Si hay proyectoId, usar endpoints del proyecto
-      // Si no hay proyectoId, usar endpoints globales (para Dashboard)
       let tareas, estados, etiquetas;
 
       if (proyectoId) {
         [tareas, estados, etiquetas] = await Promise.all([
           getTareasPorProyecto(proyectoId),
-          getEstadosPorProyecto(proyectoId),
+          getEstados(),
           getEtiquetas(),
         ]);
       } else {

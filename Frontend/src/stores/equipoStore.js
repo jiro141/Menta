@@ -113,4 +113,15 @@ export const useEquipoStore = create((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  clearEquipos: () => {
+    set({
+      equipos: [],
+      equipoActual: null,
+      proyectos: [],
+      miembros: [],
+      error: null,
+    });
+    authApi.setEquipo(null);
+  },
 }));

@@ -37,6 +37,10 @@ export default function CreateTaskModal({
   const [newEtiqueta, setNewEtiqueta] = useState({ nombre: "", color: "#3b82f6" });
   const [etiquetaError, setEtiquetaError] = useState("");
   const [creatingEtiqueta, setCreatingEtiqueta] = useState(false);
+  const [localEtiquetas, setLocalEtiquetas] = useState([]);
+
+  // Combinar etiquetas del props + locales (creadas en esta sesión)
+  const allEtiquetas = [...etiquetas, ...localEtiquetas];
   const etiquetaDropdownRef = useRef(null);
   const [etiquetaDropdownOpen, setEtiquetaDropdownOpen] = useState(false);
 
@@ -193,14 +197,10 @@ export default function CreateTaskModal({
       }
 
       setFormData(prev => ({ ...prev, etiquetas: [...(prev.etiquetas || []), String(data.id)] }));
+      setLocalEtiquetas(prev => [...prev, data]);
       setShowEtiquetaModal(false);
       setNewEtiqueta({ nombre: "", color: "#3b82f6" });
       toast.success("Etiqueta creada");
-      
-      // Notificar al padre para que refresque las etiquetas
-      if (onEtiquetaCreated) {
-        onEtiquetaCreated(data);
-      }
     } catch (err) {
       setEtiquetaError(err.message);
     } finally {
@@ -450,7 +450,7 @@ export default function CreateTaskModal({
                   Etiquetas (opcional)
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {etiquetas.map((etiqueta) => {
+                  {allEtiquetas.map((etiqueta) => {
                     const isSelected = formData.etiquetas?.includes(String(etiqueta.id));
                     return (
                       <button
@@ -488,86 +488,74 @@ export default function CreateTaskModal({
             <Button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-transparent border border-white/10 text-slate-400 hover:bg-white/5"
+              variant="secondary"
+              className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={loading || updating}
+              loading={loading || updating}
               className="flex-1"
             >
-              {loading || updating 
-                ? (editTask ? "Actualizando..." : "Creando...") 
-                : (editTask ? "Actualizar" : "Crear tarea")}
+              {editTask ? "Actualizar" : "Crear"}
             </Button>
           </div>
         </form>
-      </div>
 
-      {/* Modal para crear etiqueta */}
-      {showEtiquetaModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-[#1a1d29] rounded-2xl p-4 sm:p-6 w-full max-w-sm border border-white/10">
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Nueva Etiqueta</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Nombre</label>
-                <input
+        {/* Modal crear etiqueta */}
+        {showEtiquetaModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setShowEtiquetaModal(false)}>
+            <div className="bg-[#1a1d29] rounded-2xl p-4 w-full max-w-sm border border-white/10" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-white mb-4">Nueva Etiqueta</h3>
+              <div className="space-y-4">
+                <Input
+                  label="Nombre"
                   type="text"
+                  placeholder="Ej: Bug, Feature..."
                   value={newEtiqueta.nombre}
                   onChange={(e) => {
-                    setNewEtiqueta({ ...newEtiqueta, nombre: e.target.value });
+                    setNewEtiqueta(prev => ({ ...prev, nombre: e.target.value }));
                     setEtiquetaError("");
                   }}
-                  placeholder="Ej: Urgente, Trabajo..."
-                  className="w-full h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-white outline-none focus:border-emerald-400"
+                  error={etiquetaError}
                 />
-              {etiquetaError && (
-                <p className="text-red-400 text-sm mt-2">{etiquetaError}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm text-slate-400 mb-2">Color</label>
-                <div className="flex gap-2 flex-wrap">
-                  {["#3b82f6", "#8b5cf6", "#10b981", "#ef4444", "#f97316", "#eab308", "#ec4899", "#06b6d4", "#6b7280"].map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setNewEtiqueta({ ...newEtiqueta, color })}
-                      className={`w-8 h-8 rounded-full transition ${
-                        newEtiqueta.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1d29]" : ""
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Color</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["#3b82f6", "#10b981", "#ef4444", "#f97316", "#eab308", "#ec4899", "#06b6d4", "#8b5cf6"].map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setNewEtiqueta(prev => ({ ...prev, color: c }))}
+                        className={`w-8 h-8 rounded-full transition ${newEtiqueta.color === c ? 'ring-2 ring-white' : ''}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowEtiquetaModal(false);
-                  setNewEtiqueta({ nombre: "", color: "#3b82f6" });
-                }}
-                className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreateEtiqueta}
-                disabled={creatingEtiqueta}
-                className="flex-1 px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition disabled:opacity-50"
-              >
-                {creatingEtiqueta ? "Creando..." : "Crear"}
-              </button>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowEtiquetaModal(false)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateEtiqueta}
+                  disabled={creatingEtiqueta}
+                  className="flex-1 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition disabled:opacity-50"
+                >
+                  {creatingEtiqueta ? "Creando..." : "Crear"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

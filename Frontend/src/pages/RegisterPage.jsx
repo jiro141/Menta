@@ -4,10 +4,12 @@ import toast from "react-hot-toast";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { useAuthStore } from "../stores/authStore";
+import { useEquipoStore } from "../stores/equipoStore";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register, isLoading } = useAuthStore();
+  const { clearEquipos, fetchEquipos } = useEquipoStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,7 +33,9 @@ export default function RegisterPage() {
     }
 
     try {
+      clearEquipos();
       await register(email, password);
+      await fetchEquipos();
       toast.success("¡Cuenta creada! Ahora puedes iniciar sesión");
       navigate("/login");
     } catch (error) {

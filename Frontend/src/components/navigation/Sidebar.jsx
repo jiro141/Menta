@@ -1,6 +1,7 @@
-import { NavLink, useLocation, useParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useEquipoStore } from "../../stores/equipoStore";
-import { FolderKanban } from "lucide-react";
+import { FolderKanban, ChevronDown } from "lucide-react";
 import { 
   Folder, Code, Palette, ShoppingCart, BarChart3, Settings, 
   Users, MessageSquare, Calendar as CalendarMail, Mail, FileText, Briefcase, 
@@ -30,12 +31,27 @@ const ICONOS = {
 
 export default function Sidebar() {
   const location = useLocation();
-  const params = useParams();
-  const { equipoActual, proyectos } = useEquipoStore();
+  const { equipos, equipoActual, proyectos, selectEquipo } = useEquipoStore();
+  const [showEquiposMenu, setShowEquiposMenu] = useState(false);
 
-  const items = [
-    { label: "Equipos", icon: FolderKanban, path: "/app/equipos" },
-  ];
+  const handleSelectEquipo = async (equipoId) => {
+    await selectEquipo(equipoId);
+    setShowEquiposMenu(false);
+  };
+
+  // Cerrar dropdown cuando hace click fuera
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowEquiposMenu(false);
+      }
+    };
+    if (showEquiposMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEquiposMenu]);
 
   return (
     <>
@@ -50,30 +66,69 @@ export default function Sidebar() {
         </div>
 
         <nav className="flex flex-col items-center gap-3 w-full px-2">
-          {items.map(({ label, icon: Icon, path }) => (
-            <NavLink
-              key={label}
-              to={path}
-              className={({ isActive }) =>
-                [
-                  "w-full flex flex-col items-center gap-2 rounded-2xl px-2 py-3 transition-all",
-                  isActive
-                    ? "bg-[#10203e] text-white"
-                    : "text-[#c9d2e3] hover:bg-white/5 hover:text-white",
-                ].join(" ")
-              }
+          {/* Link a página de equipos - PRIMERO */}
+          <NavLink
+            to="/app/equipos"
+            className={({ isActive }) =>
+              [
+                "w-full flex flex-col items-center gap-2 rounded-2xl px-2 py-3 transition-all",
+                isActive
+                  ? "bg-[#10203e] text-white"
+                  : "text-[#c9d2e3] hover:bg-white/5 hover:text-white",
+              ].join(" ")
+            }
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+              <FolderKanban size={20} strokeWidth={2.1} />
+            </div>
+            <span className="text-[11px] font-medium leading-none text-center">
+              Equipos
+            </span>
+          </NavLink>
+
+          {/* Selector de equipo - SEGUNDO */}
+          <div className="relative w-full" ref={dropdownRef}>
+            <button
+              onClick={() => setShowEquiposMenu(!showEquiposMenu)}
+              className="w-full flex flex-col items-center gap-1 rounded-2xl px-2 py-2 transition-all text-[#c9d2e3] hover:bg-white/5 hover:text-white"
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                <Icon size={20} strokeWidth={2.1} />
+              <div 
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: equipoActual?.color || "#6366f1" }}
+              >
+                <FolderKanban size={16} className="text-white" />
               </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] font-medium leading-none text-center truncate max-w-[60px]">
+                  {equipoActual?.nombre || "Equipo"}
+                </span>
+                <ChevronDown size={10} className={`transition-transform ${showEquiposMenu ? 'rotate-180' : ''}`} />
+              </div>
+            </button>
 
-              <span className="text-[11px] font-medium leading-none text-center">
-                {label}
-              </span>
-            </NavLink>
-          ))}
+            {/* Dropdown de equipos */}
+            {showEquiposMenu && (
+              <div className="absolute left-0 top-full mt-1 w-40 bg-[#1a1d29] border border-white/10 rounded-xl shadow-lg overflow-hidden z-50">
+                {equipos.map((equipo) => (
+                  <button
+                    key={equipo.id}
+                    onClick={() => handleSelectEquipo(equipo.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/10 transition ${
+                      equipoActual?.id === equipo.id ? 'bg-white/10 text-white' : 'text-slate-300'
+                    }`}
+                  >
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: equipo.color || "#6366f1" }}
+                    />
+                    <span className="truncate">{equipo.nombre}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* Proyectos del equipo actual */}
+          {/* Proyectos del equipo actual - TERCERO */}
           {equipoActual && proyectos.map((proyecto) => {
             const IconComponent = ICONOS[proyecto.icono] || Folder;
             const isActive = location.pathname.startsWith(`/app/proyecto/${proyecto.id}`);
@@ -105,25 +160,18 @@ export default function Sidebar() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b1220] border-t border-white/10 flex justify-around py-2 z-40">
-        {items.map(({ label, icon: Icon, path }) => (
-          <NavLink
-            key={label}
-            to={path}
-            className={({ isActive }) =>
-              [
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all",
-                isActive
-                  ? "text-white"
-                  : "text-[#c9d2e3]",
-              ].join(" ")
-            }
-          >
-            <Icon size={20} strokeWidth={2.1} />
-            <span className="text-[10px] font-medium">
-              {label}
-            </span>
-          </NavLink>
-        ))}
+        <NavLink
+          to="/app/equipos"
+          className={({ isActive }) =>
+            [
+              "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all",
+              isActive ? "text-white" : "text-[#c9d2e3]",
+            ].join(" ")
+          }
+        >
+          <FolderKanban size={20} strokeWidth={2.1} />
+          <span className="text-[10px] font-medium">Equipos</span>
+        </NavLink>
       </nav>
     </>
   );

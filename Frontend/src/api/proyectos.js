@@ -20,7 +20,7 @@ export async function getEstados(proyectoId) {
 export async function createEstado(proyectoId, data) {
   return apiFetch("/estados/", {
     method: "POST",
-    body: JSON.stringify({ ...data, proyecto_id: proyectoId }),
+    body: JSON.stringify(data),
   });
 }
 

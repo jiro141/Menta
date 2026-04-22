@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import BoardView from "../components/board/BoardView";
 import { useSearchStore } from "../stores/searchStore";
+import { useEquipoStore } from "../stores/equipoStore";
 
 export default function BoardPage() {
   const location = useLocation();
   const params = useParams();
   const { selectedTask, isModalOpen, clearSelection } = useSearchStore();
+  const { equipoActual } = useEquipoStore();
   const [initialEditTask, setInitialEditTask] = useState(null);
   
   // Obtener proyectoId de los parámetros de la ruta
@@ -26,5 +28,5 @@ export default function BoardPage() {
     }
   }, [isModalOpen, selectedTask, location.state, clearSelection]);
 
-  return <BoardView proyectoId={proyectoId} initialEditTask={initialEditTask} onEditHandled={() => setInitialEditTask(null)} />;
+  return <BoardView proyectoId={proyectoId} equipoId={equipoActual?.id} initialEditTask={initialEditTask} onEditHandled={() => setInitialEditTask(null)} />;
 }

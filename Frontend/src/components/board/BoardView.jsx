@@ -85,7 +85,7 @@ function SortableTaskCard({ task, onClick, onDelete, onArchive }) {
   );
 }
 
-export default function BoardView({ proyectoId, initialEditTask, onEditHandled }) {
+export default function BoardView({ proyectoId, equipoId, initialEditTask, onEditHandled }) {
   const { data, loading, error, refetch } = useBoardData(proyectoId);
   const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -346,12 +346,13 @@ export default function BoardView({ proyectoId, initialEditTask, onEditHandled }
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: JSON.stringify({
-          nombre: nombre,
-          color: newEstado.color,
-          orden: data.statuses.length,
-          es_final: newEstado.es_final || false,
-        }),
+body: JSON.stringify({
+           nombre: nombre,
+           color: newEstado.color,
+           orden: data.statuses.length,
+           es_final: newEstado.es_final || false,
+           equipo_id: equipoId,
+         }),
       });
 
       const errorData = await response.json().catch(() => ({}));
@@ -583,7 +584,10 @@ export default function BoardView({ proyectoId, initialEditTask, onEditHandled }
         etiquetas={data.etiquetas || []}
         loading={creatingTask}
         selectedStatus={selectedStatus}
-        onEtiquetaCreated={() => refetch()}
+        onEtiquetaCreated={() => {
+          // Solo recargar etiquetas, no todo el board
+          // refetch();
+        }}
       />
 
       {/* Modal de confirmación */}

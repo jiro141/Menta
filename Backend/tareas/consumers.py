@@ -139,11 +139,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def check_member(self):
-        """Verificar que el usuario es miembro del proyecto."""
-        return Miembro.objects.filter(
-            proyecto_id=self.proyecto_id,
-            usuario=self.user
-        ).exists()
+        """Verificar que el usuario es miembro del equipo del proyecto."""
+        try:
+            proyecto = Proyecto.objects.get(id=self.proyecto_id)
+            return Miembro.objects.filter(
+                equipo=proyecto.equipo,
+                usuario=self.user
+            ).exists()
+        except Proyecto.DoesNotExist:
+            return False
     
     @database_sync_to_async
     def save_message(self, contenido):

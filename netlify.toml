@@ -1,0 +1,18 @@
+# Redirects para API y WebSocket
+[[redirects]]
+  from = "/api/*"
+  to = "https://mentadev.pythonanywhere.com/api/:path"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/ws/*"
+  to = "https://mentadev.pythonanywhere.com/ws/:path"
+  status = 200
+  force = true
+
+# SPA fallback - todo lo demás va a index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -6,6 +6,7 @@ import { useSearchStore } from "../stores/searchStore";
 import { useBoardData } from "../hooks/useBoardData";
 import { useEquipoStore } from "../stores/equipoStore";
 import { useProyectoStore } from "../stores/proyectoStore";
+import { useAuthStore } from "../stores/authStore";
 import { getToken } from "../api/auth";
 import toast from "react-hot-toast";
 import { MessageCircle, X, Send, User } from "lucide-react";
@@ -20,14 +21,18 @@ export default function AppLayout() {
   const { refetch } = useBoardData();
   const { equipoActual, miembros, fetchMiembros } = useEquipoStore();
   const { proyecto, fetchProyecto } = useProyectoStore();
+  const { user: currentUser } = useAuthStore();
   
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(false); // DESACTIVADO
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [mensajes, setMensajes] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
+
+  // Filtrar miembros excluding current user
+  const otrosMiembros = miembros.filter(m => m.usuario?.id !== currentUser?.id);
   
   // Solo mostrar chat si estamos en un proyecto y hay equipo
   const isInProject = location.pathname.startsWith('/app/proyecto/') && params.proyectoId;
@@ -46,6 +51,14 @@ export default function AppLayout() {
       fetchMiembros(equipoActual.id);
     }
   }, [equipoActual?.id]);
+
+  // Limpiar mensajes cuando cambia el proyecto
+  useEffect(() => {
+    if (proyectoId) {
+      setMensajes([]);
+      setSelectedChatUser(null);
+    }
+  }, [proyectoId]);
   
   // Cargar mensajes cuando se selecciona un usuario para chatear
   useEffect(() => {
@@ -201,18 +214,15 @@ export default function AppLayout() {
         </div>
       )}
 
-      {/* Chat flotante - solo en proyecto */}
-      {isInProject && (
-        <>
-          {/* Botón flotante */}
-          {!showChat && (
-            <button
-              onClick={() => setShowChat(true)}
-              className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white z-50 transition-all duration-300 hover:scale-110"
-            >
-              <MessageCircle size={24} />
-            </button>
-          )}
+{/* Chat - DESACTIVADO */}
+      {false && isInProject && (
+        <button
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white z-50 transition-all duration-300 hover:scale-110"
+        >
+          <MessageCircle size={24} />
+        </button>
+      )}
           
           {/* Panel del chat */}
           {showChat && (
@@ -238,10 +248,10 @@ export default function AppLayout() {
               {!selectedChatUser ? (
                 <div className="flex-1 overflow-y-auto p-2">
                   <p className="text-xs text-white/50 px-2 mb-2">Miembros del equipo</p>
-                  {miembros.length === 0 ? (
-                    <p className="text-white/40 text-sm text-center py-4">No hay miembros</p>
+                  {otrosMiembros.length === 0 ? (
+                    <p className="text-white/40 text-sm text-center py-4">No hay otros miembros</p>
                   ) : (
-                    miembros.map((miembro) => (
+                    otrosMiembros.map((miembro) => (
                       <button
                         key={miembro.id}
                         onClick={() => setSelectedChatUser(miembro)}

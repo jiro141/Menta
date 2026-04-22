@@ -142,6 +142,14 @@ class Estado(models.Model):
         on_delete=models.CASCADE,
         related_name='estados'
     )
+    # FK a equipo (estados son por equipo, nullable para migración)
+    equipo = models.ForeignKey(
+        Equipo,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='estados'
+    )
     # FK a proyecto (nullable para backward compatibility)
     proyecto = models.ForeignKey(
         Proyecto,

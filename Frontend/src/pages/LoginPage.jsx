@@ -4,10 +4,12 @@ import toast from "react-hot-toast";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { useAuthStore } from "../stores/authStore";
+import { useEquipoStore } from "../stores/equipoStore";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isLoading } = useAuthStore();
+  const { clearEquipos, fetchEquipos } = useEquipoStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -20,7 +22,9 @@ export default function LoginPage() {
     }
 
     try {
+      clearEquipos();
       await login(email, password);
+      await fetchEquipos();
       toast.success("¡Bienvenido a Menta!");
       navigate("/app/board");
     } catch (error) {
